@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+
+  <!-- Remote configuration pointing to AOSP and your GitHub -->
+  <remote name="aosp"
+          fetch="https://android.googlesource.com/"
+          review="android-review.googlesource.com"
+          revision="refs/tags/android-15.0.0_r1" />
+
+  <remote name="github"
+          fetch="https://github.com/" />
+
+  <!-- Default remote and revision settings -->
+  <default remote="aosp"
+           revision="refs/tags/android-15.0.0_r1"
+           sync-j="8" />
+
+  <!-- Core AOSP Manifest Projects (Example baseline structure) -->
+  <project path="build/make" name="platform/build" groups="pdk" />
+  <project path="bionic" name="platform/bionic" groups="pdk" />
+  <project path="frameworks/base" name="platform/frameworks/base" groups="pdk-subsystem" />
+
+  <!-- Your custom SurgRifts / EternalOS adjustments can go here later -->
+  <!-- Example: <project path="device/surg/eternal" name="Rverseking/device_surg_eternal" remote="github" revision="main" /> -->
+
+</manifest>
+
