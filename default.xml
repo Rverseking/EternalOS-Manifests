@@ -20,7 +20,7 @@
   <project path="bionic" name="platform/bionic" groups="pdk" />
   <project path="frameworks/base" name="platform/frameworks/base" groups="pdk-subsystem" />
 
-  <!-- Your custom SurgRifts / EternalOS adjustments can go here later -->
+  <!-- EternalOS adjustments go here -->
   <!-- Example: <project path="device/surg/eternal" name="Rverseking/device_surg_eternal" remote="github" revision="main" /> -->
 
 </manifest>
