@@ -1,0 +1,3 @@
+# crave.yaml
+AOSP:
+  ignoreClientHostname: true
