@@ -11,6 +11,6 @@ jobs:
         CRAVE_TOKEN: ${{ secrets.CRAVE_TOKEN }}
       run: |
         curl -sL https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh -o crave && chmod +x crave
-        echo "{\"Authorization\":\"Bearer CRAVE_TOKEN\",\"User-Agent\":\"Crave\",\"projects\":[],\"server\":\"https://crave.io\"}" > crave.conf
+        echo "{\"Authorization\":\"Bearer $CRAVE_TOKEN\",\"User-Agent\":\"Crave\",\"projects\":[],\"server\":\"https://crave.io\"}" > crave.conf
         ./crave repo init -u https://github.com -b main -m default.xml && ./crave repo sync
         ./crave devspace --ide
