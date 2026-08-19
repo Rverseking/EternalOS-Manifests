@@ -1,104 +1,41 @@
-name: EternalOS Cloud Development Space
-
-on:
-  workflow_dispatch:
-
-jobs:
-  devspace:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout workflow repository
-        uses: actions/checkout@v4
-
-      - name: Install Crave
-        run: |
-          set -e
-
-          echo "Installing Crave..."
-
-          curl -sL \
-            https://raw.githubusercontent.com/accupara/crave/refs/heads/master/get_crave.sh \
-            | bash -s --
-
-          chmod +x ./crave
-
-          echo "Crave version:"
-          ./crave version
-
-      - name: Configure Crave authentication
+- name: Configure Crave authentication (fixed)
         env:
           CRAVE_USERNAME: ${{ secrets.CRAVE_USERNAME }}
           CRAVE_TOKEN: ${{ secrets.CRAVE_TOKEN }}
         run: |
           set -e
 
-          mkdir -p "$HOME/.config/crave"
-
+          # Correct format that prevents "Unfilled Header" / Login again errors
           cat > "$HOME/crave.conf" <<EOF
           {
             "username": "${CRAVE_USERNAME}",
-            "Authorization": "${CRAVE_TOKEN}"
+            "headers": {
+              "Content-Type": "application/json",
+              "Authorization": "${CRAVE_TOKEN}",
+              "User-Agent": "Crave"
+            },
+            "projects": [],
+            "server": "https://foss.crave.io/api"
           }
           EOF
 
           chmod 600 "$HOME/crave.conf"
+          echo "Crave authentication configured correctly."
 
-          echo "Crave authentication configured."
-
-      - name: Install Android repo tool
+      - name: Start Crave Devspace (no local AOSP download)
         run: |
           set -e
 
-          mkdir -p "$HOME/bin"
+          # Put crave in PATH
+          export PATH="$GITHUB_WORKSPACE:$PATH"
 
-          curl -L \
-            https://storage.googleapis.com/git-repo-downloads/repo \
-            -o "$HOME/bin/repo"
+          echo "Crave version:"
+          ./crave version
 
-          chmod +x "$HOME/bin/repo"
+          echo "Listing available projects (to confirm auth works)..."
+          ./crave list || true
 
-          # IMPORTANT:
-          # $GITHUB_PATH only affects later Actions steps.
-          # Export it here too so this step can use repo immediately.
-          export PATH="$HOME/bin:$PATH"
-
-          echo "$HOME/bin" >> "$GITHUB_PATH"
-
-          echo "Repo version:"
-          repo --version
-
-      - name: Create AOSP 15 workspace
-        run: |
-          set -e
-
-          export PATH="$HOME/bin:$PATH"
-
-          mkdir -p "$HOME/aosp"
-          cd "$HOME/aosp"
-
-          echo "Initializing AOSP 15..."
-
-          repo init \
-            -u https://android.googlesource.com/platform/manifest \
-            -b android-15.0.0_r1
-
-          echo "Syncing AOSP..."
-
-          repo sync \
-            -c \
-            -j"$(nproc)" \
-            --no-clone-bundle \
-            --no-tags
-
-          echo "AOSP 15 source downloaded successfully."
-
-      - name: Start Crave Devspace
-        run: |
-          set -e
-
-          cd "$HOME/aosp"
-
-          echo "Starting Crave Devspace..."
-
-          "$GITHUB_WORKSPACE/crave" devspace --ide
+          echo "Starting Crave Devspace with IDE..."
+          # This hands everything to Crave's remote side.
+          # No full AOSP sync happens on the GitHub runner.
+          ./crave devspace --ide
