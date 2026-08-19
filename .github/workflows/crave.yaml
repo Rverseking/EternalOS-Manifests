@@ -1,11 +1,7 @@
-name: EternalOS Crave GSI Sync Only
+name: EternalOS Crave GSI Sync
 
 on:
   workflow_dispatch:
-
-concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
 
 jobs:
   build:
@@ -16,11 +12,13 @@ jobs:
 
       - name: Setup Crave CLI & Auth Secrets
         run: |
+          # 1. Download and install Crave CLI
           curl -sL https://raw.githubusercontent.com/accupara/crave/refs/heads/master/get_crave.sh -o get_crave.sh
           bash get_crave.sh
           sudo chmod +x crave
           sudo mv crave /usr/local/bin/crave
 
+          # 2. Configure Crave authentication
           mkdir -p ~/.crave
           cat <<EOF > ~/.crave/crave.conf
           {
@@ -29,13 +27,16 @@ jobs:
           }
           EOF
 
-      - name: Sync EternalOS 1.5 (AOSP 15.0)
+      - name: Generate Local Crave Config
         run: |
-          # 1. Create crave.yaml on the GitHub runner so Crave CLI links to the los21 project base
+          # Explicitly create crave.yaml in current workspace folder
+          # Pointing to "los21" assigns the build to an active Crave DevSpace container
           cat <<EOF > crave.yaml
           los21:
             ignoreClientHostname: true
           EOF
 
-          # 2. Run resync inside Crave to pull YOUR custom EternalOS AOSP 15.0 manifest
-          crave run -- "rm -rf .repo/local_manifests .repo/manifests && /opt/crave/resync.sh https://github.com/${{ github.repository }}.git main"
+      - name: Sync EternalOS 1.5 Source
+        run: |
+          # Run the resync script using the local crave.yaml configuration file
+          crave -c crave.yaml run -- "rm -rf .repo/local_manifests .repo/manifests && /opt/crave/resync.sh https://github.com/${{ github.repository }}.git main"
