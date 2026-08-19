@@ -14,22 +14,31 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Crave CLI
+      - name: Setup Crave CLI & Auth Secrets
         run: |
+          # Install Crave CLI
+          curl -sL https://raw.githubusercontent.com/accupara/crave/refs/heads/master/get_crave.sh -o get_crave.sh
+          bash get_crave.sh
+          sudo chmod +x crave
+          sudo mv crave /usr/local/bin/crave
+
+          # Generate global config in temporary VM runner
           mkdir -p ~/.crave
-          cat <<'EOF' > ~/.crave/crave.conf
+          cat <<EOF > ~/.crave/crave.conf
           {
             "username": "${{ secrets.CRAVE_USERNAME }}",
             "auth_token": "${{ secrets.CRAVE_TOKEN }}"
           }
           EOF
-          # Download Crave installer script and extract binary
-          curl -sL https://raw.githubusercontent.com/accupara/crave/refs/heads/master/get_crave.sh -o get_crave.sh
-          bash get_crave.sh
-          sudo chmod +x crave
-          sudo mv crave /usr/local/bin/crave
-          crave version
+
+          # Generate workspace config in temporary VM runner
+          cat <<EOF > crave.conf
+          {
+            "username": "${{ secrets.CRAVE_USERNAME }}",
+            "auth_token": "${{ secrets.CRAVE_TOKEN }}"
+          }
+          EOF
 
       - name: Sync Source Code on Crave
         run: |
-          crave run -- "repo init -u https://github.com/${{ github.repository }}.git -b main && repo sync -c --force-sync --no-clone-bundle --no-tags -j\$(nproc --all)"
+          crave devspace -- "repo init -u https://github.com/${{ github.repository }}.git -b main && repo sync -c --force-sync --no-clone-bundle --no-tags -j\$(nproc --all)"
