@@ -12,13 +12,11 @@ jobs:
 
       - name: Setup Crave CLI & Auth Secrets
         run: |
-          # 1. Download and install Crave CLI
           curl -sL https://raw.githubusercontent.com/accupara/crave/refs/heads/master/get_crave.sh -o get_crave.sh
           bash get_crave.sh
           sudo chmod +x crave
           sudo mv crave /usr/local/bin/crave
 
-          # 2. Configure Crave authentication
           mkdir -p ~/.crave
           cat <<EOF > ~/.crave/crave.conf
           {
@@ -29,8 +27,7 @@ jobs:
 
       - name: Generate Local Crave Config
         run: |
-          # Explicitly create crave.yaml in current workspace folder
-          # Pointing to "los21" assigns the build to an active Crave DevSpace container
+          # Generates the config file on the VM right before Crave reads it
           cat <<EOF > crave.yaml
           los21:
             ignoreClientHostname: true
@@ -38,5 +35,4 @@ jobs:
 
       - name: Sync EternalOS 1.5 Source
         run: |
-          # Run the resync script using the local crave.yaml configuration file
-          crave -c crave.yaml run -- "rm -rf .repo/local_manifests .repo/manifests && /opt/crave/resync.sh https://github.com/${{ github.repository }}.git main"
+          crave run -- "rm -rf .repo/local_manifests .repo/manifests && /opt/crave/resync.sh https://github.com/${{ github.repository }}.git main"
