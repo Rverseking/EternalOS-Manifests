@@ -1,0 +1,36 @@
+name: EternalOS Crave GSI Build
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Crave CLI
+        run: |
+          mkdir -p ~/.crave
+          cat <<EOF > ~/.crave/crave.conf
+          {
+            "username": "${{ secrets.CRAVE_USERNAME }}",
+            "auth_token": "${{ secrets.CRAVE_TOKEN }}"
+          }
+          EOF
+          curl -s https://raw.githubusercontent.com/accupara/crave/main/get_crave.sh | bash
+          sudo mv crave /usr/local/bin/
+
+      - name: Sync Source Code on Crave
+        run: |
+          crave run -- "repo init -u https://github.com/${{ github.repository }}.git -b main && repo sync -c --force-sync --no-clone-bundle --no-tags -j\$(nproc --all)"
+
+      - name: Apply Treble Patches & Compile GSI
+        run: |
+          crave run -- "bash device/phh/treble/generate.sh treble_arm64_bvN && source build/envsetup.sh && lunch treble_arm64_bvN-userdebug && make systemimage -j\$(nproc --all)"
+
