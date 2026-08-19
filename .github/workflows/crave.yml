@@ -29,12 +29,13 @@ jobs:
           }
           EOF
 
-      - name: Create Dedicated Crave Project Workspace
+      - name: Force Crave Config & Sync Source Code
         run: |
-          # Creates a project workspace named "eternal_os" under base image 1
-          crave clone create "eternal_os" --projectID 1 || true
+          # 1. Generate local crave.yaml so CLI doesn't freak out 📝
+          cat <<EOF > crave.yaml
+          base: ubuntu:22.04
+          EOF
 
-      - name: Sync EternalOS AOSP 15 Source
-        run: |
-          # Point crave run to your newly created workspace folder
-          crave run -- "repo init -u https://github.com/${{ github.repository }}.git -b main --depth=1 && repo sync -c --force-sync --no-clone-bundle --no-tags -j\$(nproc)"
+          # 2. Sync your AOSP 15 manifest inside Crave remote devspace 📱💥
+          crave run --projectURL https://github.com/LineageOS/android.git -- "rm -rf .repo/manifests .repo/local_manifests && repo init -u https://github.com/${{ github.repository }}.git -b main --depth=1 && repo sync -c --force-sync --no-clone-bundle --no-tags -j\$(nproc)"
+
