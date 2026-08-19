@@ -1,21 +1,21 @@
-name: EternalOS GSI Builder
+name: EternalOS Cloud Development Space
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
+  devspace:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Setup Crave and Build
+    - name: Setup Crave and Launch IDE
       env:
         CRAVE_USERNAME: ${{ secrets.CRAVE_USERNAME }}
         CRAVE_TOKEN: ${{ secrets.CRAVE_TOKEN }}
       run: |
-        curl -L https://github.com -o crave && chmod +x crave
-        printf '%s\n' '{"Authorization": "'"$CRAVE_TOKEN"'", "User-Agent": "Crave", "projects": [], "server": "https://foss.crave.io/api"}' > crave.conf
+        curl -L https://githubusercontent.com -o crave && chmod +x crave
+        printf '%s\n' '{"Authorization": "'"$CRAVE_TOKEN"'", "User-Agent": "Crave", "projects": [], "server": "https://crave.io"}' > crave.conf
         ./crave repo init -u https://github.com -b main -m default.xml && ./crave repo sync
-        ./crave run -- ". build/envsetup.sh && lunch aosp_arm64-trunk_food-userdebug && make systemimage -j\$(nproc)"
+        ./crave devspace --ide
