@@ -10,15 +10,13 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Crave CLI & Configs
+      - name: Setup Crave CLI & Auth
         run: |
-          # 1. Install Crave CLI
           curl -sL https://raw.githubusercontent.com/accupara/crave/refs/heads/master/get_crave.sh -o get_crave.sh
           bash get_crave.sh
           sudo chmod +x crave
           sudo mv crave /usr/local/bin/crave
 
-          # 2. Write authentication credentials
           mkdir -p ~/.crave
           cat <<EOF > ~/.crave/crave.conf
           {
@@ -27,16 +25,15 @@ jobs:
           }
           EOF
 
-          # 3. Write valid JSON crave.yaml directly into the root workspace folder 🎯
+      - name: Create Real Crave YAML
+        run: |
+          # Write valid Crave YAML format mapping to the official base container
           cat <<EOF > crave.yaml
-          {
-            "los21": {
-              "ignoreClientHostname": true
-            }
-          }
+          LOS 21:
+            ignoreClientHostname: true
           EOF
 
-      - name: Sync EternalOS 1.5 Source
+      - name: Sync Source Code
         run: |
-          # Run crave directly without -c flag so it parses local crave.yaml automatically 🚀
-          crave run -- "rm -rf .repo/local_manifests .repo/manifests && /opt/crave/resync.sh https://github.com/${{ github.repository }}.git main"
+          # Run the resync script using Crave's LOS 21 base container
+          crave run -- "rm -rf .repo/local_manifests .repo/manifests && /opt/crave/resync.sh https://github.com/Rverseking/EternalOS-Manifests.git main"
