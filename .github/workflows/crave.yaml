@@ -1,33 +1,71 @@
-name: EternalOS Crave GSI Sync
+name: EternalOS 1.5 - Crave DevSpace
 
 on:
   workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  sync:
+    # Crave DevSpace provides the self-hosted runner.
+    runs-on: self-hosted
+
     steps:
-      - name: Checkout Code
+      - name: Checkout workflow repository
         uses: actions/checkout@v4
 
-      - name: Setup Crave CLI & Auth Secrets
+      - name: Install Crave CLI
+        shell: bash
         run: |
-          # 1. Install Crave CLI
-          curl -sL https://raw.githubusercontent.com/accupara/crave/refs/heads/master/get_crave.sh -o get_crave.sh
+          curl -sL https://raw.githubusercontent.com/accupara/crave/refs/heads/master/get_crave.sh \
+            -o get_crave.sh
           bash get_crave.sh
+
           sudo chmod +x crave
           sudo mv crave /usr/local/bin/crave
 
-          # 2. Write authentication credentials
-          mkdir -p ~/.crave
-          cat <<EOF > ~/.crave/crave.conf
+      - name: Configure Crave authentication
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.crave"
+
+          cat > "$HOME/.crave/crave.conf" <<EOF
           {
             "username": "${{ secrets.CRAVE_USERNAME }}",
             "auth_token": "${{ secrets.CRAVE_TOKEN }}"
           }
           EOF
 
-      - name: Sync EternalOS 1.5 Source
+      - name: Show available Crave projects
+        shell: bash
         run: |
-          # Bypasses local config files completely and forces Crave to sync your default.xml
-          crave run --no-patch -- "rm -rf .repo/local_manifests .repo/manifests && repo init -u https://github.com/Rverseking/EternalOS-Manifests.git -b main && repo sync -c --force-sync --no-clone-bundle --no-tags -j\$(nproc)"
+          crave clone list
+
+      - name: Initialize EternalOS 1.5
+        shell: bash
+        run: |
+          rm -rf .repo/local_manifests .repo/manifests
+
+          repo init \
+            -u https://github.com/Rverseking/EternalOS-Manifests.git \
+            -b main
+
+      - name: Sync EternalOS 1.5 / AOSP 15
+        shell: bash
+        run: |
+          repo sync \
+            -c \
+            --force-sync \
+            --no-clone-bundle \
+            --no-tags \
+            -j"$(nproc)"
+
+      - name: Show sync result
+        shell: bash
+        run: |
+          echo "========================================"
+          echo "EternalOS source sync completed."
+          echo "========================================"
+          echo "Workspace:"
+          pwd
+          echo
+          echo "Top-level source directories:"
+          find . -maxdepth 1 -type d | sort
