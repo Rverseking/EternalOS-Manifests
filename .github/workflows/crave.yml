@@ -23,10 +23,13 @@ jobs:
             "auth_token": "${{ secrets.CRAVE_TOKEN }}"
           }
           EOF
-          curl -sL https://raw.githubusercontent.com/accupara/crave/main/get_crave.sh | bash
-          chmod +x crave || true
-          sudo mv crave /usr/bin/crave || sudo mv crave /usr/local/bin/crave
+          # Download Crave installer script and extract binary
+          curl -sL https://raw.githubusercontent.com/accupara/crave/refs/heads/master/get_crave.sh -o get_crave.sh
+          bash get_crave.sh
+          sudo chmod +x crave
+          sudo mv crave /usr/local/bin/crave
+          crave version
 
-      - name: Sync Source Code on Crave (No Compiling!)
+      - name: Sync Source Code on Crave
         run: |
           crave run -- "repo init -u https://github.com/${{ github.repository }}.git -b main && repo sync -c --force-sync --no-clone-bundle --no-tags -j\$(nproc --all)"
