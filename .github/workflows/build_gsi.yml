@@ -12,15 +12,19 @@ jobs:
       run: |
         curl -sL https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh -o crave && chmod +x crave
         
-        # Create crave.conf using correct bash variable expansion
-        cat << EOF > crave.conf
-        {
-          "Authorization": "Bearer ${CRAVE_TOKEN}",
-          "User-Agent": "Crave",
-          "projects": [],
-          "server": "https://crave.io"
+        # Python safely generates the JSON file without bash quote/escaping headaches
+        python3 -c '
+        import json, os
+        config = {
+            "Authorization": f"Bearer {os.environ[\"CRAVE_TOKEN\"]}",
+            "User-Agent": "Crave",
+            "projects": [],
+            "server": "https://crave.io"
         }
-        EOF
+        with open("crave.conf", "w") as f:
+            json.dump(config, f, indent=2)
+        '
         
         ./crave repo init -u https://github.com -b main -m default.xml && ./crave repo sync
         ./crave devspace --ide
+
