@@ -18,7 +18,7 @@ jobs:
           sudo chmod +x crave
           sudo mv crave /usr/local/bin/crave
 
-          # 2. Write authentication file
+          # 2. Write authentication credentials
           mkdir -p ~/.crave
           cat <<EOF > ~/.crave/crave.conf
           {
@@ -27,15 +27,7 @@ jobs:
           }
           EOF
 
-      - name: Write Local Crave Project Config
-        run: |
-          # Create crave.yaml in the runner workspace mapping to Crave's AOSP base project template 🎯
-          cat <<EOF > crave.yaml
-          AOSP:
-            ignoreClientHostname: true
-          EOF
-
       - name: Sync EternalOS 1.5 Source
         run: |
-          # Run pure repo init + sync directly inside Crave's build environment using your default.xml
+          # Bypasses local config files completely and forces Crave to sync your default.xml
           crave run --no-patch -- "rm -rf .repo/local_manifests .repo/manifests && repo init -u https://github.com/Rverseking/EternalOS-Manifests.git -b main && repo sync -c --force-sync --no-clone-bundle --no-tags -j\$(nproc)"
