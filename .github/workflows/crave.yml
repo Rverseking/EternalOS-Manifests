@@ -29,12 +29,12 @@ jobs:
           }
           EOF
 
-      - name: Sync Source Code on Crave
+      - name: Create Dedicated Crave Project Workspace
         run: |
-          # 1. Create crave.yaml locally so the CLI satisfies its config check
-          cat <<EOF > crave.yaml
-          base: ubuntu:22.04
-          EOF
+          # Creates a project workspace named "eternal_os" under base image 1
+          crave clone create "eternal_os" --projectID 1 || true
 
-          # 2. Run the source sync inside Crave remote devspace
+      - name: Sync EternalOS AOSP 15 Source
+        run: |
+          # Point crave run to your newly created workspace folder
           crave run -- "repo init -u https://github.com/${{ github.repository }}.git -b main --depth=1 && repo sync -c --force-sync --no-clone-bundle --no-tags -j\$(nproc)"
