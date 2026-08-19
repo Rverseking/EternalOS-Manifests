@@ -22,7 +22,7 @@ jobs:
           sudo chmod +x crave
           sudo mv crave /usr/local/bin/crave
 
-          # Generate global config in temporary VM runner
+          # Setup authentication configs
           mkdir -p ~/.crave
           cat <<EOF > ~/.crave/crave.conf
           {
@@ -31,7 +31,6 @@ jobs:
           }
           EOF
 
-          # Generate workspace config in temporary VM runner
           cat <<EOF > crave.conf
           {
             "username": "${{ secrets.CRAVE_USERNAME }}",
@@ -41,4 +40,4 @@ jobs:
 
       - name: Sync Source Code on Crave
         run: |
-          crave devspace -- "repo init -u https://github.com/${{ github.repository }}.git -b main && repo sync -c --force-sync --no-clone-bundle --no-tags -j\$(nproc --all)"
+          crave run --no-patch -- "repo init -u https://github.com/${{ github.repository }}.git -b main && repo sync -c --force-sync --no-clone-bundle --no-tags -j\$(nproc --all)"
