@@ -3,6 +3,10 @@ name: EternalOS Crave GSI Sync Only
 on:
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -10,7 +14,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Crave CLI
+      - name: Setup Crave CLI & Auth Secrets
         run: |
           curl -sL https://raw.githubusercontent.com/accupara/crave/refs/heads/master/get_crave.sh -o get_crave.sh
           bash get_crave.sh
@@ -25,15 +29,13 @@ jobs:
           }
           EOF
 
-      - name: Generate AOSP Crave Config
+      - name: Sync EternalOS 1.5 (AOSP 15.0)
         run: |
-          # Sets Crave base target directly to generic AOSP 
+          # 1. Create crave.yaml on the GitHub runner so Crave CLI links to the los21 project base
           cat <<EOF > crave.yaml
-          AOSP:
+          los21:
             ignoreClientHostname: true
           EOF
 
-      - name: Sync EternalOS 1.5 (AOSP 15.0)
-        run: |
-          # Pass --no-patch so Crave doesn't attempt Lineage-specific patches
-          crave run --no-patch -- "curl -sL https://raw.githubusercontent/${{ github.repository }}/main/build.sh | bash"
+          # 2. Run resync inside Crave to pull YOUR custom EternalOS AOSP 15.0 manifest
+          crave run -- "rm -rf .repo/local_manifests .repo/manifests && /opt/crave/resync.sh https://github.com/${{ github.repository }}.git main"
