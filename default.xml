@@ -15,11 +15,14 @@
            revision="refs/tags/android-15.0.0_r1"
            sync-j="8" />
 
-  <!-- Include the main AOSP manifest or a Treble base -->
-  <!-- Option A: If you want a full base manifest, you usually include upstream repos. 
-       For a GSI, most people inherit from Phh-Treble / TrebleDroid manifests. 
-       Let's add a placeholder for your Treble base or custom additions: -->
-
+  <!-- Include standard AOSP platform manifest (or inherit from a stable source base) -->
+  <!-- For a GSI, you typically fetch the entire platform manifest from a base like Android Open Source Project -->
+  
+  <!-- Phh-Treble / TrebleDroid specific repos required for GSI magic -->
   <project path="device/phh/treble" name="phhusson/device_phh_treble" remote="github" revision="android-15.0" />
+  <project path="vendor/app/phh-sepolicy" name="phhusson/vendor_app_phh-sepolicy" remote="github" revision="android-15.0" />
+
+  <!-- Add your custom EternalOS overlays/packages here -->
+  <!-- <project path="vendor/eternal" name="Rverseking/vendor_eternal" remote="github" revision="main" /> -->
 
 </manifest>
