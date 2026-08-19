@@ -22,7 +22,7 @@ jobs:
           sudo chmod +x crave
           sudo mv crave /usr/local/bin/crave
 
-          # Setup authentication configs in home directory
+          # Setup authentication configs
           mkdir -p ~/.crave
           cat <<EOF > ~/.crave/crave.conf
           {
@@ -31,6 +31,17 @@ jobs:
           }
           EOF
 
+      - name: Generate Crave Config
+        run: |
+          # Auto-create crave.yaml if it does not exist in the repo root
+          if [ ! -f crave.yaml ]; then
+            cat <<EOF > crave.yaml
+          base: ubuntu:22.04
+          EOF
+          fi
+
       - name: Sync Source Code on Crave
         run: |
-          crave run -- "repo init -u https://github.com/${{ github.repository }}.git -b main && repo sync -c --force-sync --no-clone-bundle --no-tags"
+          # Runs repo init and fast parallel sync on Crave server
+          crave run -- "repo init -u https://github.com/${{ github.repository }}.git -b main --depth=1 && repo sync -c --force-sync --no-clone-bundle --no-tags -j\$(nproc)"
+
