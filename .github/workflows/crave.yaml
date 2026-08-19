@@ -18,7 +18,7 @@ jobs:
           sudo chmod +x crave
           sudo mv crave /usr/local/bin/crave
 
-          # 2. Write authentication file
+          # 2. Write authentication credentials
           mkdir -p ~/.crave
           cat <<EOF > ~/.crave/crave.conf
           {
@@ -27,15 +27,16 @@ jobs:
           }
           EOF
 
-          # 3. Write crave.yaml directly into ~/.crave/ and local root so it cannot be missed! 🎯
-          cat <<EOF > ~/.crave/crave.yaml
-          los21:
-            ignoreClientHostname: true
+          # 3. Write valid JSON crave.yaml directly into the root workspace folder 🎯
+          cat <<EOF > crave.yaml
+          {
+            "los21": {
+              "ignoreClientHostname": true
+            }
+          }
           EOF
-
-          cp ~/.crave/crave.yaml ./crave.yaml
 
       - name: Sync EternalOS 1.5 Source
         run: |
-          # Explicitly pass -c ~/.crave/crave.yaml to stop Zero-Conf URL fallback
-          crave -c ~/.crave/crave.yaml run -- "rm -rf .repo/local_manifests .repo/manifests && /opt/crave/resync.sh https://github.com/${{ github.repository }}.git main"
+          # Run crave directly without -c flag so it parses local crave.yaml automatically 🚀
+          crave run -- "rm -rf .repo/local_manifests .repo/manifests && /opt/crave/resync.sh https://github.com/${{ github.repository }}.git main"
