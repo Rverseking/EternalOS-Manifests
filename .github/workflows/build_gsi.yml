@@ -1,0 +1,34 @@
+name: EternalOS GSI Builder
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup Crave and Build
+      env:
+        CRAVE_USERNAME: ${{ secrets.CRAVE_USERNAME }}
+        CRAVE_TOKEN: ${{ secrets.CRAVE_TOKEN }}
+      run: |
+        # Download official crave binary using GitHub's ultra-fast network pipeline
+        curl -sL https://githubusercontent.com | bash -s --
+        chmod +x crave
+        
+        # Build the configuration file automatically
+        printf '%s\n' '{"Authorization": "'"$CRAVE_TOKEN"'", "User-Agent": "Crave", "projects": [], "server": "https://crave.io"}' > crave.conf
+        
+        # Pull your manifest and force sync it directly inside the cloud container
+        ./crave repo init -u https://github.com{{ github.repository }} -b main -m default.xml
+        ./crave repo sync
+        
+        # Execute the Android compilation commands directly in the cloud container
+        ./crave run -- "
+        . build/envsetup.sh && \
+        lunch aosp_arm64-trunk_food-userdebug && \
+        make systemimage -j\$(nproc)
+        "
