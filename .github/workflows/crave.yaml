@@ -10,7 +10,7 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Crave CLI & Configs
+      - name: Setup Crave CLI & Auth Secrets
         run: |
           # 1. Install Crave CLI
           curl -sL https://raw.githubusercontent.com/accupara/crave/refs/heads/master/get_crave.sh -o get_crave.sh
@@ -18,7 +18,7 @@ jobs:
           sudo chmod +x crave
           sudo mv crave /usr/local/bin/crave
 
-          # 2. Write authentication credentials
+          # 2. Write authentication file
           mkdir -p ~/.crave
           cat <<EOF > ~/.crave/crave.conf
           {
@@ -27,13 +27,15 @@ jobs:
           }
           EOF
 
-          # 3. Write official Crave YAML using quoted base project mapping 🎯
+      - name: Write Local Crave Project Config
+        run: |
+          # Create crave.yaml in the runner workspace mapping to Crave's AOSP base project template 🎯
           cat <<EOF > crave.yaml
-          "LOS 21":
+          AOSP:
             ignoreClientHostname: true
           EOF
 
       - name: Sync EternalOS 1.5 Source
         run: |
-          # Executes remote resync on Crave's LOS 21 base container targeting EternalOS-Manifests
-          crave run -- "rm -rf .repo/local_manifests .repo/manifests && /opt/crave/resync.sh https://github.com/Rverseking/EternalOS-Manifests.git main"
+          # Run pure repo init + sync directly inside Crave's build environment using your default.xml
+          crave run --no-patch -- "rm -rf .repo/local_manifests .repo/manifests && repo init -u https://github.com/Rverseking/EternalOS-Manifests.git -b main && repo sync -c --force-sync --no-clone-bundle --no-tags -j\$(nproc)"
