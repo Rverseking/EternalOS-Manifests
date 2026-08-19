@@ -16,13 +16,11 @@ jobs:
 
       - name: Setup Crave CLI & Auth Secrets
         run: |
-          # Install Crave CLI
           curl -sL https://raw.githubusercontent.com/accupara/crave/refs/heads/master/get_crave.sh -o get_crave.sh
           bash get_crave.sh
           sudo chmod +x crave
           sudo mv crave /usr/local/bin/crave
 
-          # Setup authentication configs
           mkdir -p ~/.crave
           cat <<EOF > ~/.crave/crave.conf
           {
@@ -31,17 +29,14 @@ jobs:
           }
           EOF
 
-      - name: Generate Crave Config
+      - name: Create Workspace on Crave
         run: |
-          # Auto-create crave.yaml if it does not exist in the repo root
-          if [ ! -f crave.yaml ]; then
-            cat <<EOF > crave.yaml
-          base: ubuntu:22.04
-          EOF
-          fi
+          # Allocate a dedicated workspace named eternal_aosp15
+          crave clone create --projectID 1 eternal_aosp15 || true
 
-      - name: Sync Source Code on Crave
+      - name: Sync EternalOS AOSP 15 Source Code
         run: |
-          # Runs repo init and fast parallel sync on Crave server
-          crave run -- "repo init -u https://github.com/${{ github.repository }}.git -b main --depth=1 && repo sync -c --force-sync --no-clone-bundle --no-tags -j\$(nproc)"
-
+          # Clean workspace directory and repo init your manifest from scratch
+          crave run -- "rm -rf .repo/local_manifests .repo/manifests && \
+            repo init -u https://github.com/${{ github.repository }}.git -b main --depth=1 && \
+            repo sync -c --force-sync --no-clone-bundle --no-tags -j\$(nproc)"
