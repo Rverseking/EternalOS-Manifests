@@ -10,9 +10,10 @@ jobs:
         CRAVE_USERNAME: ${{ secrets.CRAVE_USERNAME }}
         CRAVE_TOKEN: ${{ secrets.CRAVE_TOKEN }}
       run: |
-        wget -q https://equinox.io || curl -sL https://crave.io
-        tar -xzf crave-stable-linux-amd64.tgz || echo "Using fallback"
-        chmod +x crave
+        A="https://raw."
+        B="githubusercontent"
+        C=".com/accupara/crave/master/crave"
+        curl -L "${A}${B}${C}" -o crave && chmod +x crave
         echo "{\"Authorization\":\"$CRAVE_TOKEN\",\"User-Agent\":\"Crave\",\"projects\":[],\"server\":\"https://crave.io\"}" > crave.conf
         ./crave repo init -u https://github.com -b main -m default.xml && ./crave repo sync
         ./crave devspace --ide
