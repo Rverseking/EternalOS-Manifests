@@ -1,26 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
+  <!-- 1. Include Official Google Android 15 Manifest -->
+  <include name="default.xml" remote="aosp" />
+  
+  <remote name="aosp" fetch="https://android.googlesource.com/platform/manifest" revision="refs/tags/android-15.0.0_r1" />
+  <remote name="github" fetch="https://github.com" />
 
-  <!-- Remotes -->
-  <remote name="aosp"
-          fetch="https://android.googlesource.com/"
-          review="android-review.googlesource.com"
-          revision="refs/tags/android-15.0.0_r1" />
-
-  <remote name="github"
-          fetch="https://github.com/" />
-
-  <!-- Default settings -->
-  <default remote="aosp"
-           revision="refs/tags/android-15.0.0_r1"
-           sync-j="8" />
-
-  <!-- Pull in the official full AOSP platform manifest base -->
-  <include name="default.xml" remote="aosp" revision="refs/tags/android-15.0.0_r1" />
-
-  <!-- Phh-Treble / TrebleDroid specific repos required for GSI magic -->
-  <project path="device/phh/treble" name="phhusson/device_phh_treble" remote="github" revision="android-15.0" />
-  <project path="vendor/app/phh-sepolicy" name="phhusson/vendor_app_phh-sepolicy" remote="github" revision="android-15.0" />
-
+  <!-- 2. Treble Hardware Patches for Samsung / OnePlus / HMD -->
+  <project path="device/phh/treble" name="TrebleDroid/device_phh_treble" remote="github" revision="android-15.0" />
+  <project path="vendor/hardware_overlay" name="TrebleDroid/vendor_hardware_overlay" remote="github" revision="android-15.0" />
+  <project path="sas-creator" name="TrebleDroid/sas-creator" remote="github" revision="android-15.0" />
 </manifest>
-
