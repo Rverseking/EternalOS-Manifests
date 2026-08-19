@@ -22,7 +22,7 @@ jobs:
           sudo chmod +x crave
           sudo mv crave /usr/local/bin/crave
 
-          # Setup authentication configs
+          # Setup authentication configs in home directory
           mkdir -p ~/.crave
           cat <<EOF > ~/.crave/crave.conf
           {
@@ -31,13 +31,6 @@ jobs:
           }
           EOF
 
-          cat <<EOF > crave.conf
-          {
-            "username": "${{ secrets.CRAVE_USERNAME }}",
-            "auth_token": "${{ secrets.CRAVE_TOKEN }}"
-          }
-          EOF
-
       - name: Sync Source Code on Crave
         run: |
-          crave run --projectURL https://github.com/${{ github.repository }} -- "repo init -u https://github.com/${{ github.repository }}.git -b main && repo sync -c --force-sync --no-clone-bundle --no-tags"
+          crave run -- "repo init -u https://github.com/${{ github.repository }}.git -b main && repo sync -c --force-sync --no-clone-bundle --no-tags"
