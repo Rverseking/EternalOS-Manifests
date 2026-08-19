@@ -1,30 +1,83 @@
 name: EternalOS Cloud Development Space
+
 on:
   workflow_dispatch:
+
 jobs:
   devspace:
     runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v4
-    - env:
-        CRAVE_USERNAME: ${{ secrets.CRAVE_USERNAME }}
-        CRAVE_TOKEN: ${{ secrets.CRAVE_TOKEN }}
-      run: |
-        curl -sL https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh -o crave && chmod +x crave
-        
-        # Clean Python string concatenation avoids the f-string escaping bug entirely
-        python3 -c '
-        import json, os
-        config = {
-            "Authorization": "Bearer " + os.environ["CRAVE_TOKEN"],
-            "User-Agent": "Crave",
-            "projects": [],
-            "server": "https://crave.io"
-        }
-        with open("crave.conf", "w") as f:
-            json.dump(config, f, indent=2)
-        '
-        
-        ./crave repo init -u https://github.com -b main -m default.xml && ./crave repo sync
-        ./crave devspace --ide
 
+    steps:
+      - name: Checkout workflow repository
+        uses: actions/checkout@v4
+
+      - name: Install Crave
+        env:
+          CRAVE_USERNAME: ${{ secrets.CRAVE_USERNAME }}
+          CRAVE_TOKEN: ${{ secrets.CRAVE_TOKEN }}
+        run: |
+          set -e
+
+          echo "Installing Crave..."
+          curl -sL https://raw.githubusercontent.com/accupara/crave/refs/heads/master/get_crave.sh | bash -s --
+
+          chmod +x ./crave
+
+          echo "Crave version:"
+          ./crave version
+
+      - name: Configure Crave authentication
+        env:
+          CRAVE_USERNAME: ${{ secrets.CRAVE_USERNAME }}
+          CRAVE_TOKEN: ${{ secrets.CRAVE_TOKEN }}
+        run: |
+          set -e
+
+          cat > "$HOME/crave.conf" <<EOF
+          {
+            "username": "${CRAVE_USERNAME}",
+            "Authorization": "${CRAVE_TOKEN}"
+          }
+          EOF
+
+          chmod 600 "$HOME/crave.conf"
+
+      - name: Install Android repo tool
+        run: |
+          set -e
+
+          mkdir -p "$HOME/bin"
+
+          curl -L https://storage.googleapis.com/git-repo-downloads/repo \
+            -o "$HOME/bin/repo"
+
+          chmod +x "$HOME/bin/repo"
+
+          echo "$HOME/bin" >> "$GITHUB_PATH"
+
+          repo --version
+
+      - name: Create AOSP 15 workspace
+        run: |
+          set -e
+
+          mkdir -p "$HOME/aosp"
+          cd "$HOME/aosp"
+
+          echo "Initializing AOSP 15..."
+
+          repo init \
+            -u https://android.googlesource.com/platform/manifest \
+            -b android-15.0.0_r1
+
+          echo "Syncing AOSP..."
+          repo sync -c -j$(nproc) --no-clone-bundle --no-tags
+
+          echo "AOSP source downloaded successfully."
+
+      - name: Start Crave Devspace
+        run: |
+          cd "$HOME/aosp"
+
+          echo "Starting Crave Devspace..."
+          "$GITHUB_WORKSPACE/crave" devspace --ide
