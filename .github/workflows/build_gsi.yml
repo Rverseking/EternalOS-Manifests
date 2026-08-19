@@ -12,7 +12,7 @@ jobs:
       run: |
         curl -sL https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh -o crave && chmod +x crave
         
-        # Using a heredoc safely expands the environment variables into the file
+        # Write the config using unquoted EOF so $CRAVE_TOKEN actually expands
         cat << EOF > crave.conf
         {
           "Authorization": "Bearer $CRAVE_TOKEN",
@@ -24,3 +24,4 @@ jobs:
         
         ./crave repo init -u https://github.com -b main -m default.xml && ./crave repo sync
         ./crave devspace --ide
+
