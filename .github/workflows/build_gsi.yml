@@ -15,20 +15,7 @@ jobs:
         CRAVE_USERNAME: ${{ secrets.CRAVE_USERNAME }}
         CRAVE_TOKEN: ${{ secrets.CRAVE_TOKEN }}
       run: |
-        # Download the real official pre-compiled crave application tool
-        curl -sL https://githubusercontent.com | bash -s --
-        chmod +x crave
-        
-        # Build the configuration file targeting the correct FOSS server
+        curl -L https://github.com -o crave && chmod +x crave
         printf '%s\n' '{"Authorization": "'"$CRAVE_TOKEN"'", "User-Agent": "Crave", "projects": [], "server": "https://foss.crave.io/api"}' > crave.conf
-        
-        # Initialize your exact repository and pull default.xml
-        ./crave repo init -u https://github.com/Rverseking/EternalOS-Manifests -b main -m default.xml
-        ./crave repo sync
-        
-        # Open up a devspace and run the full GSI compilation sequence
-        ./crave run -- "
-        . build/envsetup.sh && \
-        lunch aosp_arm64-trunk_food-userdebug && \
-        make systemimage -j\$(nproc)
-        "
+        ./crave repo init -u https://github.com -b main -m default.xml && ./crave repo sync
+        ./crave run -- ". build/envsetup.sh && lunch aosp_arm64-trunk_food-userdebug && make systemimage -j\$(nproc)"
