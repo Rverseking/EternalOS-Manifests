@@ -12,9 +12,15 @@ jobs:
       run: |
         curl -sL https://raw.githubusercontent.com/accupara/crave/master/get_crave.sh -o crave && chmod +x crave
         
-        # Authenticate using the CLI parameters/environment variables directly
-        ./crave login --username "$CRAVE_USERNAME" --token "$CRAVE_TOKEN" || true
+        # Create crave.conf using correct bash variable expansion
+        cat << EOF > crave.conf
+        {
+          "Authorization": "Bearer ${CRAVE_TOKEN}",
+          "User-Agent": "Crave",
+          "projects": [],
+          "server": "https://crave.io"
+        }
+        EOF
         
         ./crave repo init -u https://github.com -b main -m default.xml && ./crave repo sync
         ./crave devspace --ide
-
