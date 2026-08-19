@@ -1,12 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
-  <!-- 1. Include Official Google Android 15 Manifest -->
-  <include name="default.xml" remote="aosp" />
-  
-  <remote name="aosp" fetch="https://android.googlesource.com/platform/manifest" revision="refs/tags/android-15.0.0_r1" />
+  <remote name="aosp" fetch="https://googlesource.com" />
   <remote name="github" fetch="https://github.com" />
-
-  <!-- 2. Treble Hardware Patches for Samsung / OnePlus / HMD -->
+  <default remote="aosp" revision="refs/tags/android-15.0.0_r1" sync-j="4" />
   <project path="device/phh/treble" name="TrebleDroid/device_phh_treble" remote="github" revision="android-15.0" />
   <project path="vendor/hardware_overlay" name="TrebleDroid/vendor_hardware_overlay" remote="github" revision="android-15.0" />
   <project path="sas-creator" name="TrebleDroid/sas-creator" remote="github" revision="android-15.0" />
