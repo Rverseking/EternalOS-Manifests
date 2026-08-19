@@ -29,12 +29,15 @@ jobs:
           }
           EOF
 
-      - name: Sync Source Code on Crave
+      - name: Generate Root Crave Config
         run: |
-          # Create a dummy crave.yaml to satisfy local CLI checks
-          cat <<EOF > crave.yaml
-          base: ubuntu:22.04
+          # Creates the ACTUAL crave.yaml in the root folder where Crave CLI expects it 📝
+          cat <<EOF > ./crave.yaml
+          LOS 21:
+            ignoreClientHostname: true
           EOF
 
-          # Pull and execute your hosted raw build script on Crave
-          crave run --projectURL https://github.com/LineageOS/android.git -- "curl -sL https://raw.githubusercontent.com/Rverseking/EternalOS-Manifests/main/build.sh | bash"
+      - name: Sync Source Code on Crave
+        run: |
+          # Runs Crave's native resync script to pull your AOSP 15 manifest 📱
+          crave run -- "rm -rf .repo/local_manifests .repo/manifests && /opt/crave/resync.sh https://github.com/${{ github.repository }}.git main"
