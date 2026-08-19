@@ -1,5 +1,5 @@
-- name: Configure Crave authentication (fixed)
-        env:
+name: Configure Crave authentication (fixed)
+env:
           CRAVE_USERNAME: ${{ secrets.CRAVE_USERNAME }}
           CRAVE_TOKEN: ${{ secrets.CRAVE_TOKEN }}
         run: |
