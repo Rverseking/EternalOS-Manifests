@@ -40,4 +40,4 @@ jobs:
 
       - name: Sync Source Code on Crave
         run: |
-          crave run --no-patch -- "repo init -u https://github.com/${{ github.repository }}.git -b main && repo sync -c --force-sync --no-clone-bundle --no-tags -j\$(nproc --all)"
+          crave run --projectURL https://github.com/${{ github.repository }} -- "repo init -u https://github.com/${{ github.repository }}.git -b main && repo sync -c --force-sync --no-clone-bundle --no-tags"
