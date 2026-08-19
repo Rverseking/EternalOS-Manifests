@@ -10,13 +10,15 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Crave CLI & Auth Secrets
+      - name: Setup Crave CLI & Configs
         run: |
+          # 1. Install Crave CLI
           curl -sL https://raw.githubusercontent.com/accupara/crave/refs/heads/master/get_crave.sh -o get_crave.sh
           bash get_crave.sh
           sudo chmod +x crave
           sudo mv crave /usr/local/bin/crave
 
+          # 2. Write authentication file
           mkdir -p ~/.crave
           cat <<EOF > ~/.crave/crave.conf
           {
@@ -25,14 +27,15 @@ jobs:
           }
           EOF
 
-      - name: Generate Local Crave Config
-        run: |
-          # Generates the config file on the VM right before Crave reads it
-          cat <<EOF > crave.yaml
+          # 3. Write crave.yaml directly into ~/.crave/ and local root so it cannot be missed! 🎯
+          cat <<EOF > ~/.crave/crave.yaml
           los21:
             ignoreClientHostname: true
           EOF
 
+          cp ~/.crave/crave.yaml ./crave.yaml
+
       - name: Sync EternalOS 1.5 Source
         run: |
-          crave run -- "rm -rf .repo/local_manifests .repo/manifests && /opt/crave/resync.sh https://github.com/${{ github.repository }}.git main"
+          # Explicitly pass -c ~/.crave/crave.yaml to stop Zero-Conf URL fallback
+          crave -c ~/.crave/crave.yaml run -- "rm -rf .repo/local_manifests .repo/manifests && /opt/crave/resync.sh https://github.com/${{ github.repository }}.git main"
