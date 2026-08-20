@@ -1,41 +1,76 @@
-name: Configure Crave authentication (fixed)
-env:
+name: EternalOS Cloud Development Space
+
+on:
+  workflow_dispatch:
+    inputs:
+      crave_project_id:
+        description: "Crave Android/AOSP project ID from 'crave clone list'"
+        required: true
+        type: string
+
+jobs:
+  devspace:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Install Crave
+        run: |
+          set -e
+
+          curl -sL \
+            https://raw.githubusercontent.com/accupara/crave/refs/heads/master/get_crave.sh \
+            | bash -s --
+
+          chmod +x ./crave
+
+          echo "Crave:"
+          ./crave version
+
+      - name: Configure Crave
+        env:
           CRAVE_USERNAME: ${{ secrets.CRAVE_USERNAME }}
           CRAVE_TOKEN: ${{ secrets.CRAVE_TOKEN }}
         run: |
           set -e
 
-          # Correct format that prevents "Unfilled Header" / Login again errors
           cat > "$HOME/crave.conf" <<EOF
-          {
-            "username": "${CRAVE_USERNAME}",
-            "headers": {
-              "Content-Type": "application/json",
-              "Authorization": "${CRAVE_TOKEN}",
-              "User-Agent": "Crave"
-            },
-            "projects": [],
-            "server": "https://foss.crave.io/api"
-          }
+          username: ${CRAVE_USERNAME}
+          Authorization: ${CRAVE_TOKEN}
           EOF
 
           chmod 600 "$HOME/crave.conf"
-          echo "Crave authentication configured correctly."
 
-      - name: Start Crave Devspace (no local AOSP download)
+      - name: Show available Crave projects
         run: |
           set -e
 
-          # Put crave in PATH
-          export PATH="$GITHUB_WORKSPACE:$PATH"
+          echo "Available Crave projects:"
+          ./crave clone list
 
-          echo "Crave version:"
-          ./crave version
+      - name: Create EternalOS remote DevSpace clone
+        env:
+          PROJECT_ID: ${{ inputs.crave_project_id }}
+        run: |
+          set -e
 
-          echo "Listing available projects (to confirm auth works)..."
-          ./crave list || true
+          DEST="/crave-devspaces/EternalOS-AOSP15"
 
-          echo "Starting Crave Devspace with IDE..."
-          # This hands everything to Crave's remote side.
-          # No full AOSP sync happens on the GitHub runner.
-          ./crave devspace --ide
+          echo "Creating remote Crave clone..."
+          echo "Project ID: ${PROJECT_ID}"
+          echo "Destination: ${DEST}"
+
+          ./crave clone create \
+            --projectID "${PROJECT_ID}" \
+            "${DEST}"
+
+          echo
+          echo "=========================================="
+          echo "EternalOS DevSpace created successfully!"
+          echo "=========================================="
+          echo
+          echo "Remote clone:"
+          echo "${DEST}"
+          echo
+          echo "IMPORTANT:"
+          echo "Do NOT run repo sync from the DevSpace CLI."
+          echo "Use Crave Run for synchronization/build operations."
