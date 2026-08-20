@@ -5,7 +5,7 @@ on:
     inputs:
       crave_project_id:
         description: "Crave Android/AOSP project ID from 'crave clone list'"
-        required: true
+        required: false
         type: string
 
 jobs:
