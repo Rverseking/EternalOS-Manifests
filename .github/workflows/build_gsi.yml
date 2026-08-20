@@ -3,9 +3,15 @@ name: EternalOS Cloud Development Space
 on:
   workflow_dispatch:
     inputs:
-      crave_project_id:
-        description: "Crave Android/AOSP project ID from 'crave clone list'"
-        required: false
+      project_id:
+        description: "Crave Project ID for the Android Source/AOSP project"
+        required: true
+        type: string
+
+      aosp_branch:
+        description: "AOSP branch/tag"
+        required: true
+        default: "android-15.0.0_r1"
         type: string
 
 jobs:
@@ -17,13 +23,15 @@ jobs:
         run: |
           set -e
 
+          echo "Installing Crave..."
+
           curl -sL \
             https://raw.githubusercontent.com/accupara/crave/refs/heads/master/get_crave.sh \
             | bash -s --
 
           chmod +x ./crave
 
-          echo "Crave:"
+          echo "Crave version:"
           ./crave version
 
       - name: Configure Crave
@@ -33,6 +41,23 @@ jobs:
         run: |
           set -e
 
+          if [ -z "$CRAVE_USERNAME" ]; then
+            echo "ERROR: CRAVE_USERNAME secret is empty."
+            exit 1
+          fi
+
+          if [ -z "$CRAVE_TOKEN" ]; then
+            echo "ERROR: CRAVE_TOKEN secret is empty."
+            exit 1
+          fi
+
+          # Crave searches $HOME/crave.conf automatically.
+          #
+          # These are the username and Authorization values from
+          # the real crave.conf supplied by the Crave dashboard.
+          #
+          # The token itself is NEVER printed to the Actions log.
+
           cat > "$HOME/crave.conf" <<EOF
           username: ${CRAVE_USERNAME}
           Authorization: ${CRAVE_TOKEN}
@@ -40,37 +65,38 @@ jobs:
 
           chmod 600 "$HOME/crave.conf"
 
-      - name: Show available Crave projects
+          echo "Crave credentials configured."
+
+      - name: Verify Crave account
         run: |
           set -e
 
-          echo "Available Crave projects:"
-          ./crave clone list
+          echo "Checking Crave account..."
 
-      - name: Create EternalOS remote DevSpace clone
+          ./crave list
+
+      - name: Create remote Crave DevSpace
         env:
-          PROJECT_ID: ${{ inputs.crave_project_id }}
+          PROJECT_ID: ${{ inputs.project_id }}
         run: |
           set -e
 
-          DEST="/crave-devspaces/EternalOS-AOSP15"
-
-          echo "Creating remote Crave clone..."
+          echo "Creating remote Crave workspace..."
           echo "Project ID: ${PROJECT_ID}"
-          echo "Destination: ${DEST}"
 
           ./crave clone create \
-            --projectID "${PROJECT_ID}" \
-            "${DEST}"
+            --projectID "$PROJECT_ID"
 
           echo
-          echo "=========================================="
-          echo "EternalOS DevSpace created successfully!"
-          echo "=========================================="
+          echo "Remote Crave workspace created."
+
+      - name: Open Crave DevSpace
+        run: |
+          set -e
+
+          echo "Starting Crave DevSpace..."
           echo
-          echo "Remote clone:"
-          echo "${DEST}"
+          echo "AOSP source will live on Crave, NOT on the GitHub runner."
           echo
-          echo "IMPORTANT:"
-          echo "Do NOT run repo sync from the DevSpace CLI."
-          echo "Use Crave Run for synchronization/build operations."
+
+          ./crave devspace
